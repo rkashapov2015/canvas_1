@@ -9,6 +9,18 @@ var canvasNode = document.getElementById('MyCanvas');
     let array = [];
     let hue = 0;
 
+    let Magnit = function Magnit(x, y, power) {
+        this.set(x, y, power);
+    }, mp = Magnit.prototype;
+
+    mp.set = function(x, y, power) {
+        this.x = x;
+        this.y = y;
+        this.power = power;
+
+        return true;
+    }
+
     w.addEventListener('resize', (event) => {
         clearCanvas();
         resizeCanvas();
@@ -19,12 +31,16 @@ var canvasNode = document.getElementById('MyCanvas');
         
     }
     function resizeCanvas() {
+        noise.seed(Math.round(Math.random() * 65000));
         let w = window.innerWidth;
         let h = window.innerHeight;
         canvasNode.style.width = w-5 + 'px';
         canvasNode.style.height = h-5 + 'px';
         canvasNode.width = w;
         canvasNode.height = h;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
       }
 
     function randomMinMax(min, max, divider) {
@@ -36,11 +52,11 @@ var canvasNode = document.getElementById('MyCanvas');
     function init() {
         resizeCanvas();
         
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 10000; i++) {
             let x = Math.floor(Math.random() * canvasNode.width);
             let y = Math.floor(Math.random() * canvasNode.height);
             let z = Math.floor(Math.random() * canvasNode.height);
-            let angle = (Math.random() * 359)
+            let angle = (Math.random() * 360);
 
             array[i] = {
                 x: x, 
@@ -55,44 +71,46 @@ var canvasNode = document.getElementById('MyCanvas');
     function tick() {
         let width = canvasNode.width;
         let height = canvasNode.height;
-
+        
         ctx.beginPath();
         
         array.forEach(function (value) {
             let newX = 2;
             let newY = 0;
             //let angle = randomMinMax(0, 359, 1);
-
+            //value.angle = changeAngle(value.angle);
             if (value.x > width) {
                 value.x = 0;
             }
             if (value.y > height) {
                 value.y = 0;
             }
-            noise.seed(0);
+            
             let rad = getRadians(value.angle);
             
-            let dop = Math.max(noise.perlin2(value.x / 100, value.y / 100));
+            let dop = Math.max(noise.perlin3(value.x / 100, value.y / 100, -value.z/100));
             
             let radians =  rad + dop;
-            newX = 2 * Math.cos(radians) - 0 * Math.sin(radians);
+            newX = 3 * Math.cos(radians) + dop;
             newX = value.x + newX;
-            newY = 2 * Math.sin(radians) + 0 * Math.cos(radians);
+            newY = 3 * Math.sin(radians) + dop;
             newY = value.y + newY;
-            
-
+        
             drawLine(ctx, value.x, value.y, newX, newY);
 
             value.x = newX;
             value.y = newY;
+            /*if ((Math.random() * 100) > 99) {
+                noise.seed(Math.round(Math.random() * 65000));
+            }*/
             //blur()
             //console.log(value.x, value.y, newX, newY);
         });
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = 'rgba(0,0,0,0.085)';
+        ctx.fillStyle = 'rgba(0, 0, 0, .085)';
         ctx.fillRect(0, 0, width, height);
-        ctx.globalCompositeOperation = 'lighter';
         ctx.strokeStyle = 'hsla(' + hue + ', 75%, 50%, .55)';
+        ctx.globalCompositeOperation = 'lighter';
         
         ctx.stroke();
         ctx.closePath();
@@ -110,14 +128,23 @@ var canvasNode = document.getElementById('MyCanvas');
     }
 
     function drawLine(ctx, sX, sY, eX, eY) {
-        ctx.save();
-        //ctx.beginPath();
         ctx.moveTo(sX, sY);
         ctx.lineTo(eX, eY);
-        //ctx.strokeStyle = '#ffffff';
-        //ctx.closePath();
-        
-        //ctx.restore();
     }
     init();
+    function changeAngle(angle) {
+        let delta = Math.random() * 10;
+        if ((Math.random() * 100) > 50) {
+            angle -= delta;
+        } else {
+            angle += delta;
+        }
+        if (angle < 0) {
+            angle = 359;
+        }
+        if (angle > 359) {
+            angle = 0;
+        }
+        return angle;
+    }
 })(document, window);
