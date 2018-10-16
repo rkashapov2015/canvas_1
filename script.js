@@ -191,7 +191,7 @@ var canvasNode = document.getElementById('MyCanvas');
                 angle2 = 360 + angle2;
             }
             
-            let avgAngle = Math.round((value.angle*20 + angle2)/21);
+            let avgAngle = Math.round((value.angle*25 + angle2)/26);
             
             value.angle = avgAngle;
         }
