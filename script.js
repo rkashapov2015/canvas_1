@@ -7,6 +7,7 @@ var canvasNode = document.getElementById('MyCanvas');
     var width = canvasNode.width;
     var height = canvasNode.height;
     let array = [];
+    let magnits = [];
     let hue = 0;
 
     let Magnit = function Magnit(x, y, power) {
@@ -51,12 +52,44 @@ var canvasNode = document.getElementById('MyCanvas');
 
     function init() {
         resizeCanvas();
+
+        let m_width = canvasNode.width/2;
+        let m_height = canvasNode.height/2;
+
+        //magnit_point = new Magnit(m_width, m_height, 100);
+        
+
+        /*for (let j = 0; j< 30;j++) {
+            let mx = Math.floor(Math.random() * canvasNode.width);
+            let my = Math.floor(Math.random() * canvasNode.height);
+            magnits[j] = new Magnit(mx, my, 100);
+        }*/
+        
+        // 0	200
+        // -190,211484871458	61,8028399266188
+        // -117,556099517152	-161,804089770047
+        // 117,558476862896	-161,802362521924
+        // 190,210576792898	61,8056346631355
+
+        let coords = [
+            {x: 0, y: 200},
+            {x: -190, y: 61},
+            {x: -117, y: -161},
+            {x: 117, y: -161},
+            {x: 190, y: 60},
+        ];
+        let index = 0;
+        coords.forEach(function (coord) {
+            magnits[index] = new Magnit(coord.x + m_width, coord.y + m_height, 100);
+            index++;
+        });
         
         for (let i = 0; i < 10000; i++) {
             let x = Math.floor(Math.random() * canvasNode.width);
             let y = Math.floor(Math.random() * canvasNode.height);
             let z = Math.floor(Math.random() * canvasNode.height);
             let angle = (Math.random() * 360);
+            //let angle = 180;
 
             array[i] = {
                 x: x, 
@@ -75,31 +108,36 @@ var canvasNode = document.getElementById('MyCanvas');
         ctx.beginPath();
         
         array.forEach(function (value) {
-            let newX = 2;
-            let newY = 0;
+            
             //let angle = randomMinMax(0, 359, 1);
             //value.angle = changeAngle(value.angle);
-            if (value.x > width) {
-                value.x = 0;
-            }
-            if (value.y > height) {
-                value.y = 0;
+            if (value.x < 0 || value.x > width || value.y < 0 || value.y > height) {
+                value.x = Math.floor(Math.random() * canvasNode.width);
+                value.y = Math.floor(Math.random() * canvasNode.height);
+                value.angle = (Math.random() * 360);
             }
             
             let rad = getRadians(value.angle);
             
-            let dop = Math.max(noise.perlin3(value.x / 100, value.y / 100, -value.z/100));
-            
-            let radians =  rad + dop;
-            newX = 3 * Math.cos(radians) + dop;
+            let dopX = Math.max(noise.perlin3(value.x / 100, value.y / 100, value.z/100));
+            let dopY = Math.max(noise.perlin3(value.x / 100, value.y / 100, -value.z/100));            
+            let newX = 3 * Math.cos(rad) + dopX;
             newX = value.x + newX;
-            newY = 3 * Math.sin(radians) + dop;
+            let newY = 3 * Math.sin(rad) + dopY;
             newY = value.y + newY;
         
             drawLine(ctx, value.x, value.y, newX, newY);
 
             value.x = newX;
             value.y = newY;
+
+            
+            magnits.forEach(function (magnit) {
+                calcMagnetic(value, magnit);
+            })
+            
+            
+
             /*if ((Math.random() * 100) > 99) {
                 noise.seed(Math.round(Math.random() * 65000));
             }*/
@@ -126,11 +164,39 @@ var canvasNode = document.getElementById('MyCanvas');
     function getRadians(angle) {
         return angle * (PI/180);
     }
-
+    function getAngle(rad) {
+        return rad * (180/PI);
+    }
+    function getLength(xA, yA, xB, yB) {
+        return Math.abs(
+            Math.sqrt(
+                Math.pow(xB-xA, 2) + Math.pow(yB-yA, 2)
+            )
+        );
+    }
     function drawLine(ctx, sX, sY, eX, eY) {
         ctx.moveTo(sX, sY);
         ctx.lineTo(eX, eY);
     }
+
+    function calcMagnetic(value, magnit_point) {
+        let length_to_magnit = getLength(value.x, value.y, magnit_point.x, magnit_point.y);
+
+        if (length_to_magnit < magnit_point.power) {
+
+            let rad2 = Math.atan2((magnit_point.y - value.y), (magnit_point.x - value.x));
+            let angle2 = getAngle(rad2);
+
+            if (angle2 < 0) {
+                angle2 = 360 + angle2;
+            }
+            
+            let avgAngle = Math.round((value.angle*20 + angle2)/21);
+            
+            value.angle = avgAngle;
+        }
+    }
+
     init();
     function changeAngle(angle) {
         let delta = Math.random() * 10;
