@@ -59,10 +59,10 @@ var canvasNode = document.getElementById('MyCanvas');
         //magnit_point = new Magnit(m_width, m_height, 100);
         
 
-        /*for (let j = 0; j< 30;j++) {
+        /*for (let j = 0; j< 20;j++) {
             let mx = Math.floor(Math.random() * canvasNode.width);
             let my = Math.floor(Math.random() * canvasNode.height);
-            magnits[j] = new Magnit(mx, my, 100);
+            magnits[j] = new Magnit(mx, my,  randomMinMax(50, 200,1));
         }*/
         
         // 0	200
@@ -80,7 +80,7 @@ var canvasNode = document.getElementById('MyCanvas');
         ];
         let index = 0;
         coords.forEach(function (coord) {
-            magnits[index] = new Magnit(coord.x + m_width, coord.y + m_height, 100);
+            magnits[index] = new Magnit(coord.x + m_width, coord.y + m_height, 200);
             index++;
         });
         
@@ -184,14 +184,18 @@ var canvasNode = document.getElementById('MyCanvas');
 
         if (length_to_magnit < magnit_point.power) {
 
-            let rad2 = Math.atan2((magnit_point.y - value.y), (magnit_point.x - value.x));
+            let rad2 = Math.atan2( Math.abs(magnit_point.y - value.y), Math.abs(magnit_point.x - value.x));
             let angle2 = getAngle(rad2);
 
             if (angle2 < 0) {
                 angle2 = 360 + angle2;
             }
             
-            let avgAngle = Math.round((value.angle*25 + angle2)/26);
+            let rad = getRadians(value.angle);
+            let radd = Math.abs(rad - rad2)/1000;
+            radd = rad > rad2 ? rad + radd : rad - radd;
+            let avgAngle =  getAngle(radd);
+            
             
             value.angle = avgAngle;
         }
