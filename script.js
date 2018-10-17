@@ -59,11 +59,11 @@ var canvasNode = document.getElementById('MyCanvas');
         //magnit_point = new Magnit(m_width, m_height, 100);
         
 
-        /*for (let j = 0; j< 20;j++) {
+        for (let j = 0; j< 20;j++) {
             let mx = Math.floor(Math.random() * canvasNode.width);
             let my = Math.floor(Math.random() * canvasNode.height);
-            magnits[j] = new Magnit(mx, my,  randomMinMax(50, 200,1));
-        }*/
+            magnits[j] = new Magnit(mx, my,  randomMinMax(50, 300,1));
+        }
         
         // 0	200
         // -190,211484871458	61,8028399266188
@@ -79,12 +79,12 @@ var canvasNode = document.getElementById('MyCanvas');
             {x: 190, y: 60},
         ];
         let index = 0;
-        coords.forEach(function (coord) {
+        /*coords.forEach(function (coord) {
             magnits[index] = new Magnit(coord.x + m_width, coord.y + m_height, 200);
             index++;
-        });
+        });*/
         
-        for (let i = 0; i < 10000; i++) {
+        for (let i = 0; i < 100; i++) {
             let x = Math.floor(Math.random() * canvasNode.width);
             let y = Math.floor(Math.random() * canvasNode.height);
             let z = Math.floor(Math.random() * canvasNode.height);
@@ -95,7 +95,8 @@ var canvasNode = document.getElementById('MyCanvas');
                 x: x, 
                 y: y,
                 z: z,
-                angle: angle
+                angle: angle,
+                koef: 0
             };
         }
         tick();
@@ -118,12 +119,14 @@ var canvasNode = document.getElementById('MyCanvas');
             }
             
             let rad = getRadians(value.angle);
+            let rad2 = getRadians(value.koef);
+            rad += rad2;
             
             let dopX = Math.max(noise.perlin3(value.x / 100, value.y / 100, value.z/100));
             let dopY = Math.max(noise.perlin3(value.x / 100, value.y / 100, -value.z/100));            
-            let newX = 3 * Math.cos(rad) + dopX;
+            let newX = 3 * Math.cos(rad + dopX) ;
             newX = value.x + newX;
-            let newY = 3 * Math.sin(rad) + dopY;
+            let newY = 3 * Math.sin(rad + dopY);
             newY = value.y + newY;
         
             drawLine(ctx, value.x, value.y, newX, newY);
@@ -131,7 +134,6 @@ var canvasNode = document.getElementById('MyCanvas');
             value.x = newX;
             value.y = newY;
 
-            
             magnits.forEach(function (magnit) {
                 calcMagnetic(value, magnit);
             })
@@ -156,11 +158,6 @@ var canvasNode = document.getElementById('MyCanvas');
         w.requestAnimationFrame(tick);
     }
     
-    function blur() {
-        ctx.globalAlpha = 0.5;
-        ctx.fillRect(0,0,canvasNode.width,canvasNode.height);
-    }
-
     function getRadians(angle) {
         return angle * (PI/180);
     }
@@ -192,12 +189,11 @@ var canvasNode = document.getElementById('MyCanvas');
             }
             
             let rad = getRadians(value.angle);
-            let radd = Math.abs(rad - rad2)/1000;
-            radd = rad > rad2 ? rad + radd : rad - radd;
+            let radd = Math.abs(rad - rad2)/(length_to_magnit+10);
+            radd = rad > rad2 ? radd : -radd;
             let avgAngle =  getAngle(radd);
-            
-            
-            value.angle = avgAngle;
+            //value.angle = avgAngle;
+            value.koef = (value.koef  + avgAngle) * Math.log2(avgAngle);
         }
     }
 
